@@ -1,0 +1,84 @@
+server:
+  port: ":8080"
+
+# JWT_SECRET can be set via env var JWT_SECRET to override this.
+jwt_secret: "VerySecretJwtKeyForLocalDevelopmentChangeThis"
+
+services:
+  - name: "auth"
+    path_prefix: "/api/auth"
+    target_url: "http://localhost:8081"
+    auth_required: false
+    env_var: "AUTH_SERVICE_URL"
+
+  - name: "users"
+    path_prefix: "/api/users"
+    target_url: "http://localhost:8081"
+    auth_required: true
+    env_var: "AUTH_SERVICE_URL"
+
+  - name: "products"
+    path_prefix: "/api/products"
+    target_url: "http://localhost:8082"
+    auth_required: false
+    env_var: "PRODUCT_CATALOGUE_SERVICE_URL"
+
+  - name: "cart"
+    path_prefix: "/api/cart"
+    target_url: "http://localhost:8084"
+    auth_required: true
+    env_var: "SHOPPING_CART_SERVICE_URL"
+
+  - name: "wishlist"
+    path_prefix: "/api/wishlist"
+    target_url: "http://localhost:8084"
+    auth_required: true
+    env_var: "SHOPPING_CART_SERVICE_URL"
+
+  - name: "orders"
+    path_prefix: "/api/orders"
+    target_url: "http://localhost:8083"
+    auth_required: true
+    env_var: "ORDER_SERVICE_URL"
+
+  - name: "trade-in"
+    path_prefix: "/api/trade-in"
+    target_url: "http://localhost:8083"
+    auth_required: true
+    env_var: "ORDER_SERVICE_URL"
+
+  - name: "notifications"
+    path_prefix: "/api/notifications"
+    target_url: "http://localhost:8087"
+    auth_required: true
+    env_var: "NOTIFICATIONS_SERVICE_URL"
+
+  - name: "content"
+    path_prefix: "/api/content"
+    target_url: "http://localhost:8086"
+    auth_required: false
+    env_var: "CONTENT_SERVICE_URL"
+
+  - name: "support"
+    path_prefix: "/api/support"
+    target_url: "http://localhost:8085"
+    auth_required: true
+    env_var: "SUPPORT_SERVICE_URL"
+
+  - name: "warranty"
+    path_prefix: "/api/warranty"
+    target_url: "http://localhost:8085"
+    auth_required: true
+    env_var: "SUPPORT_SERVICE_URL"
+
+  - name: "analytics"
+    path_prefix: "/api/analytics"
+    target_url: "http://localhost:8088"
+    auth_required: true
+    env_var: "REPORTING_SERVICE_URL"
+
+  - name: "ai"
+    path_prefix: "/api/ai"
+    target_url: "http://localhost:8089"
+    auth_required: false
+    env_var: "AI_SERVICE_URL"
