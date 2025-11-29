@@ -1,0 +1,8 @@
+# Ignore built binaries
+apigateway
+# macOS
+.DS_Store
+# Go vendor
+vendor/
+# Build directories
+bin/
