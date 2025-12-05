@@ -6,3 +6,7 @@ apigateway
 vendor/
 # Build directories
 bin/
+
+# Ignore all .md files except README.md
+*.md
+!README.md
