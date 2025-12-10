@@ -1,0 +1,86 @@
+name: Update K8s Manifest
+
+on:
+  workflow_run:
+    workflows: ["Build and Test"]
+    types: [completed]
+    branches: ['main', 'dev']
+
+jobs:
+  update-manifest:
+    name: Update Image Tag in k8s-config
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Get branch and SHA info
+        id: info
+        run: |
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          SHORT_SHA="$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)"
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "📍 Branch: ${BRANCH}, SHA: ${SHORT_SHA}"
+      
+      - name: Checkout k8s-config repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'CSO2/Infrastructure'
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          ref: ${{ steps.info.outputs.branch }} 
+          path: 'Infrastructure'
+
+      - name: Install Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+      
+      - name: Update image tag in Kustomize overlay
+        env:
+          SERVICE_NAME_KUSTOMIZE: "cso2/api-gateway"
+          SERVICE_NAME_GHCR: "api_gateway"
+          BRANCH: ${{ steps.info.outputs.branch }}
+        run: |
+          cd Infrastructure
+          
+          if [[ "${BRANCH}" == "main" ]]; then
+            OVERLAY="prod"
+          else
+            OVERLAY="dev"
+          fi
+          
+          echo "🎯 Targeting overlay: ${OVERLAY}"
+          cd cso2/k8s/overlays/${OVERLAY}
+          
+          # Force lowercase repo owner for Docker compatibility
+          OWNER="${{ github.repository_owner }}"
+          OWNER="${OWNER,,}"
+          
+          NEW_IMAGE="ghcr.io/${OWNER}/${SERVICE_NAME_GHCR}:${{ steps.info.outputs.branch }}-${{ steps.info.outputs.sha }}"
+          
+          echo "🔄 Updating ${SERVICE_NAME_KUSTOMIZE} to use image: ${NEW_IMAGE}"
+          
+          kustomize edit set image ${SERVICE_NAME_KUSTOMIZE}=${NEW_IMAGE}
+          
+          echo "✅ Updated kustomization.yaml:"
+          cat kustomization.yaml | grep ${SERVICE_NAME_KUSTOMIZE} -A 2
+      
+      - name: Commit and push changes
+        env:
+          SERVICE_NAME: "api_gateway"
+        run: |
+          cd Infrastructure
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add cso2/k8s/overlays/
+          
+          if git diff --cached --quiet; then
+            echo "⚠️  No changes detected, skipping commit"
+            exit 0
+          fi
+          
+          git commit -m "chore(${SERVICE_NAME}): update image to ${{ steps.info.outputs.branch }}-${{ steps.info.outputs.sha }}" \
+                     -m "Triggered by: ${{ github.event.workflow_run.html_url }}"
+          
+          git push origin ${{ steps.info.outputs.branch }}
