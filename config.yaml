@@ -1,5 +1,5 @@
 server:
-  port: ":8080"
+  port: "0.0.0.0:8080"
 
 # JWT_SECRET can be set via env var JWT_SECRET to override this.
 jwt_secret: "VerySecretJwtKeyForLocalDevelopmentChangeThis"

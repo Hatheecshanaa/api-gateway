@@ -236,18 +236,10 @@ func buildRouter(cfg *Config) chi.Router {
 	r.Use(middleware.Recoverer)
 
 	// CORS
-	allowedOrigins := []string{"http://localhost:3000"}
-	if env := os.Getenv("FRONTEND_ORIGINS"); env != "" {
-		for _, origin := range strings.Split(env, ",") {
-			if strings.TrimSpace(origin) != "" {
-				allowedOrigins = append(allowedOrigins, strings.TrimSpace(origin))
-			}
-		}
-	}
 	corsMw := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-User-Subject", "X-User-Id", "X-User-Roles"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
